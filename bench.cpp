@@ -1,5 +1,5 @@
 // Замер времени работы операций БД: добавление, поиск по ключу,
-// удаление по ключу, поиск по неключевому полю (линейный).
+// удаление по ключу, поиск по категории (через индекс).
 #include <chrono>
 #include <iostream>
 #include <vector>
@@ -18,11 +18,12 @@ double msElapsed(high_resolution_clock::time_point start) {
 int main() {
     std::vector<int> sizes = {100, 1000, 5000, 10000, 20000};
 
-    std::cout << "N\tAdd_total_ms\tAdd_avg_us\tFind_total_ms(1000 searches)\tFind_avg_us\tDelete_total_ms(1000 del)\tDelete_avg_us\tLinearScan_ms(full file)\n";
+    std::cout << "N\tAdd_total_ms\tAdd_avg_us\tFind_total_ms(1000 searches)\tFind_avg_us\tDelete_total_ms(1000 del)\tDelete_avg_us\tCategorySearch_us(indexed)\n";
 
     for (int N : sizes) {
         // чистая новая БД для каждого N
         g_index.clear();
+        g_categoryIndex.clear();
         createDatabase(BENCH_FILE);
 
         // --- замер добавления N записей ---
@@ -64,10 +65,10 @@ int main() {
         }
         double delTotalMs = msElapsed(t2);
 
-        // --- замер линейного прохода по всему файлу (поиск по неключевому полю) ---
+        // --- замер поиска по категории через g_categoryIndex (категория 'A' реально существует) ---
         auto t3 = high_resolution_clock::now();
-        findByCategory(BENCH_FILE, 'Z'); // заведомо несуществующая категория -> гарантированно читает весь файл
-        double scanMs = msElapsed(t3);
+        vector<Record> catResults = findByCategory(BENCH_FILE, 'A');
+        double catSearchUs = duration<double, std::micro>(high_resolution_clock::now() - t3).count();
 
         std::cout << N << "\t"
                   << addTotalMs << "\t"
@@ -76,7 +77,7 @@ int main() {
                   << (findTotalMs * 1000.0 / searchCount) << "\t"
                   << delTotalMs << "\t"
                   << (delTotalMs * 1000.0 / delCount) << "\t"
-                  << scanMs
+                  << catSearchUs
                   << "\n";
     }
 

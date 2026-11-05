@@ -241,6 +241,7 @@ void onCreateDb(Fl_Widget*, void*) {
     if (choice == 1) {
         createDatabase(DB_FILE);
         g_index.clear();
+        g_categoryIndex.clear();
         refreshTable();
     }
 }
