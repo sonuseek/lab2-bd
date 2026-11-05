@@ -1,0 +1,5 @@
+build/
+*.exe
+*.db
+*.o
+*.obj
